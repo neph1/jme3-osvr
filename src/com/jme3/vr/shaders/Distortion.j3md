@@ -1,0 +1,19 @@
+MaterialDef Barrel {
+    MaterialParameters {
+        Int NumSamples
+        Texture2D Texture
+        Float K1_Red;
+        Float K1_Green;
+        Float K1_Blue;
+        Vector2 Center;
+    }
+ 
+    Technique {
+        VertexShader GLSL100:   Common/MatDefs/Post/Post.vert
+        FragmentShader GLSL100: com/jme3/vr/shaders/Distortion.frag
+ 
+        WorldParameters {
+            WorldViewProjectionMatrix
+        }
+    }
+}
