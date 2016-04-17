@@ -41,12 +41,11 @@ public class OsvrAppState extends AbstractAppState{
 
     ContextWrapper context;
     DisplayC display;
-    InterfaceState interfaceState;
+    
     private Application application;
     private OsvrContext osvrContext;
     
-    private final Map<String, Interface> interfaces = new HashMap<String, Interface>();
-    private final Map<String, OSVR_Pose3> trackedPoses = new HashMap<String, OSVR_Pose3>();
+    
     
     private Camera camLeft,camRight;
     private ViewPort viewPortLeft, viewPortRight;
@@ -74,12 +73,12 @@ public class OsvrAppState extends AbstractAppState{
         setupAndWaitForContext();
         
         setupAndWaitForDisplay();
-        osvrContext = new OsvrContext(display);
+        osvrContext = new OsvrContext(context, display);
     }
     
     private void setupAndWaitForContext(){
         context = new ContextWrapper();
-        context.initialize("InterfaceTest");
+        context.initialize(application.getClass().getName());
 
         while (!context.checkStatus()) {
             Logger.getLogger(OsvrAppState.class.getName()).log(Level.SEVERE, "Context not started.. ");
@@ -91,7 +90,7 @@ public class OsvrAppState extends AbstractAppState{
             context.update();
         }
         
-        interfaceState = new InterfaceState();
+        
     }
     
     private void setupAndWaitForDisplay(){
@@ -129,21 +128,7 @@ public class OsvrAppState extends AbstractAppState{
         if(context != null){
             context.update();
             osvrContext.update();
-            Iterator<String> it = interfaces.keySet().iterator();
-            OSVR_Pose3 tempPose = new OSVR_Pose3();
-            OSVR_TimeValue timeValue = new OSVR_TimeValue();
-            String key;
-            while(it.hasNext()){
-                key = it.next();
-                int result = interfaceState.osvrGetPoseState(interfaces.get(key).getNativeHandle(), timeValue, tempPose);
-                if(result == OSVRConstants.OSVR_RETURN_SUCCESS){
-                    trackedPoses.get(key).getRotation().set(tempPose.getRotation());
-                    trackedPoses.get(key).getTranslation().set(tempPose.getTranslation());
-                } else {
-                    Logger.getLogger(OsvrAppState.class.getSimpleName()).log(Level.FINE, "No pose data for " + key);
-                }
-                tempPose.dispose();
-            }
+            
             
             TempVars tempVars = TempVars.get();
             // left eye
@@ -171,18 +156,7 @@ public class OsvrAppState extends AbstractAppState{
         }
     }
     
-    public void addTrackingInterface(String name){
-        Interface iface = new Interface();
-        
-        context.getInterface(name, iface);
-        interfaces.put(name, iface);
-        trackedPoses.put(name, new OSVR_Pose3());
-        Logger.getLogger(OsvrAppState.class.getSimpleName()).log(Level.FINE, "Added interface for " + name);
-    }
     
-    public OSVR_Pose3 getPose(String name){
-        return trackedPoses.get(name);
-    }
     
     private void setupDisplay(){
         camRight = camLeft.clone();
@@ -200,7 +174,7 @@ public class OsvrAppState extends AbstractAppState{
         
         display.osvrClientGetViewerEyeSurfaceProjectionMatrixf(0, 1, 0, application.getCamera().getFrustumNear(), application.getCamera().getFrustumFar(), 0, projectionMatrix);
         camRight.setProjectionMatrix(new Matrix4f(projectionMatrix));
-        
+        display.releaseFloatArray(projectionMatrix);
         FilterPostProcessor leftProcessor = new FilterPostProcessor(application.getAssetManager());
         leftProcessor.addFilter(new DistortionFilter(0));
         application.getRenderManager().getMainView("Default").addProcessor(leftProcessor);

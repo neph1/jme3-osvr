@@ -9,9 +9,21 @@ import com.jme3.math.Vector2f;
 import com.jme3.util.TempVars;
 import com.jme3.vr.context.Eye;
 import com.jme3.vr.context.IVrContext;
+import com.jme3.vr.osvr.app.state.OsvrAppState;
 import com.jme3.vr.osvr.util.OsvrUtil;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import osvr.clientkit.ContextWrapper;
 import osvr.clientkit.DisplayC;
+import osvr.clientkit.Interface;
+import osvr.clientkit.InterfaceState;
+import osvr.clientkit.OSVRConstants;
+import osvr.util.OSVR_Pose3;
 import osvr.util.OSVR_RadialDistortionParameters;
+import osvr.util.OSVR_TimeValue;
 
 /**
  *
@@ -22,16 +34,23 @@ public class OsvrContext implements IVrContext{
     private Eye leftEye;
     private Eye rightEye;
     
-    private final DisplayC display;
+    private final Map<String, Interface> interfaces = new HashMap<String, Interface>();
+    private final Map<String, OSVR_Pose3> trackedPoses = new HashMap<String, OSVR_Pose3>();
     
-    public OsvrContext(DisplayC display){
+    ContextWrapper context;
+    private final DisplayC display;
+    InterfaceState interfaceState;
+    private OSVR_Pose3 tempPose = new OSVR_Pose3();
+    private OSVR_TimeValue timeValue = new OSVR_TimeValue();
+    
+    public OsvrContext(ContextWrapper context, DisplayC display){
         this.display = display;
         leftEye = new Eye();
         rightEye = new Eye();
         
         initialize();
     }
-    
+
     @Override
     public void initialize() {
         TempVars tempVars = TempVars.get();
@@ -50,6 +69,8 @@ public class OsvrContext implements IVrContext{
         display.releaseDoubleArray(distortion.getK1().getData());
         
         tempVars.release();
+        
+        interfaceState = new InterfaceState();
     }
     
     @Override
@@ -64,6 +85,23 @@ public class OsvrContext implements IVrContext{
         rightEye.setViewMatrix(tempVars.tempMat4);
         display.releaseFloatArray(tempVars.matrixWrite);
         tempVars.release();
+        
+        Iterator<String> it = interfaces.keySet().iterator();
+            
+            String key;
+            while(it.hasNext()){
+                key = it.next();
+                int result = interfaceState.osvrGetPoseState(interfaces.get(key).getNativeHandle(), timeValue, tempPose);
+                if(result == OSVRConstants.OSVR_RETURN_SUCCESS){
+                    trackedPoses.get(key).getRotation().set(tempPose.getRotation());
+                    trackedPoses.get(key).getTranslation().set(tempPose.getTranslation());
+                } else {
+                    Logger.getLogger(OsvrAppState.class.getSimpleName()).log(Level.FINE, "No pose data for " + key);
+                }
+                tempPose.dispose();
+                display.releaseDoubleArray(tempPose.getRotation().getData());
+                display.releaseDoubleArray(tempPose.getTranslation().getData());
+            }
     }
 
     @Override
@@ -76,7 +114,18 @@ public class OsvrContext implements IVrContext{
         return null;
     }
 
+    public void addTrackingInterface(String name){
+        Interface iface = new Interface();
+        
+        context.getInterface(name, iface);
+        interfaces.put(name, iface);
+        trackedPoses.put(name, new OSVR_Pose3());
+        Logger.getLogger(OsvrAppState.class.getSimpleName()).log(Level.FINE, "Added interface for " + name);
+    }
     
+    public OSVR_Pose3 getPose(String name){
+        return trackedPoses.get(name);
+    }
 
     
 }

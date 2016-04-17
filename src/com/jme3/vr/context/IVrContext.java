@@ -12,9 +12,9 @@ package com.jme3.vr.context;
  */
 public interface IVrContext {
     
-    public void initialize();
+    void initialize();
     
-    public void update();
+    void update();
     
-    public Eye getEye(int eye);
+    Eye getEye(int eye);
 }
