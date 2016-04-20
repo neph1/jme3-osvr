@@ -171,7 +171,8 @@ public class OsvrAppState extends AbstractAppState{
         int height = vpLeft[3];
         camLeft.setViewPort(((float)vpLeft[0]) / width, ((float)vpLeft[2]) / width, ((float)vpLeft[1]) / height, ((float)vpLeft[3]) / height);
         camRight.setViewPort(((float)vpRight[0]) / width, ((float)vpRight[2]+ vpRight[0]) / width, ((float)vpRight[1]) / height, ((float)vpRight[3]) / height);
-        
+        display.releaseIntArray(vpLeft);
+        display.releaseIntArray(vpRight);
         viewPortRight = application.getRenderManager().createMainView("Right viewport", camRight);
         viewPortRight.setClearFlags(true, true, true);
         viewPortRight.setBackgroundColor(viewPortLeft.getBackgroundColor());
