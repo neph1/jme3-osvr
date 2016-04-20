@@ -18,6 +18,11 @@ public class Eye {
     private final Matrix4f viewMatrix = new Matrix4f();
     private final Vector3f distortionK = new Vector3f();
     private final Vector2f distortionCenter = new Vector2f();
+    private final int index;
+    
+    public Eye(int index){
+        this.index = index;
+    }
     
     public Matrix4f getViewMatrix(){
         return viewMatrix;
@@ -42,6 +47,13 @@ public class Eye {
     public void setDistortionCenter(Vector2f distortionCenter) {
         this.distortionCenter.set(distortionCenter);
     }
+
+    public int getIndex() {
+        return index;
+    }
     
+    public String toString(){
+        return "Eye: " + index + " Distortion Center: " + distortionCenter + " K: " + distortionK;
+    }
     
 }

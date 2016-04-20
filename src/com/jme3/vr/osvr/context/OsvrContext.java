@@ -31,8 +31,8 @@ import osvr.util.OSVR_TimeValue;
  */
 public class OsvrContext implements IVrContext{
 
-    private Eye leftEye;
-    private Eye rightEye;
+    private final Eye leftEye;
+    private final Eye rightEye;
     
     private final Map<String, Interface> interfaces = new HashMap<String, Interface>();
     private final Map<String, OSVR_Pose3> trackedPoses = new HashMap<String, OSVR_Pose3>();
@@ -45,8 +45,8 @@ public class OsvrContext implements IVrContext{
     
     public OsvrContext(ContextWrapper context, DisplayC display){
         this.display = display;
-        leftEye = new Eye();
-        rightEye = new Eye();
+        leftEye = new Eye(0);
+        rightEye = new Eye(1);
         
         initialize();
     }
@@ -69,7 +69,6 @@ public class OsvrContext implements IVrContext{
         display.releaseDoubleArray(distortion.getK1().getData());
         
         tempVars.release();
-        
         interfaceState = new InterfaceState();
     }
     
@@ -80,6 +79,8 @@ public class OsvrContext implements IVrContext{
         display.osvrClientGetViewerEyeViewMatrixf(0, 0, 0, tempVars.matrixWrite);
         OsvrUtil.toMatrix4f(tempVars.tempMat4, tempVars.matrixWrite);
         leftEye.setViewMatrix(tempVars.tempMat4);
+        display.releaseFloatArray(tempVars.matrixWrite);
+        
         display.osvrClientGetViewerEyeViewMatrixf(0, 1, 0, tempVars.matrixWrite);
         OsvrUtil.toMatrix4f(tempVars.tempMat4, tempVars.matrixWrite);
         rightEye.setViewMatrix(tempVars.tempMat4);

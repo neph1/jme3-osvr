@@ -16,7 +16,7 @@ import com.jme3.renderer.ViewPort;
 import com.jme3.scene.Node;
 import com.jme3.util.TempVars;
 import com.jme3.vr.osvr.context.OsvrContext;
-import com.jme3.vr.osvr.post.DistortionFilter;
+import com.jme3.vr.osvr.post.OsvrDistortionFilter;
 import com.jme3.vr.osvr.util.OsvrUtil;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -74,6 +74,8 @@ public class OsvrAppState extends AbstractAppState{
         
         setupAndWaitForDisplay();
         osvrContext = new OsvrContext(context, display);
+        
+        setupViews();
     }
     
     private void setupAndWaitForContext(){
@@ -117,9 +119,6 @@ public class OsvrAppState extends AbstractAppState{
         }
         display = new DisplayC();
         display.setDisplayConfig(displayConfig);
-        
-        setupDisplay();
-        
     }
 
     @Override
@@ -158,7 +157,7 @@ public class OsvrAppState extends AbstractAppState{
     
     
     
-    private void setupDisplay(){
+    private void setupViews(){
         camRight = camLeft.clone();
         camLeft.setViewPort(0, 0.5f, 0, 1f);
         camRight.setViewPort(0.5f, 1f, 0, 1f);
@@ -175,12 +174,14 @@ public class OsvrAppState extends AbstractAppState{
         display.osvrClientGetViewerEyeSurfaceProjectionMatrixf(0, 1, 0, application.getCamera().getFrustumNear(), application.getCamera().getFrustumFar(), 0, projectionMatrix);
         camRight.setProjectionMatrix(new Matrix4f(projectionMatrix));
         display.releaseFloatArray(projectionMatrix);
+        OsvrDistortionFilter leftEyeDistortion = new OsvrDistortionFilter(osvrContext.getEye(0));
         FilterPostProcessor leftProcessor = new FilterPostProcessor(application.getAssetManager());
-        leftProcessor.addFilter(new DistortionFilter(0));
+        leftProcessor.addFilter(leftEyeDistortion);
         application.getRenderManager().getMainView("Default").addProcessor(leftProcessor);
         
+        OsvrDistortionFilter rightEyeDistortion = new OsvrDistortionFilter(osvrContext.getEye(1));
         FilterPostProcessor rightProcessor = new FilterPostProcessor(application.getAssetManager());
-        rightProcessor.addFilter(new DistortionFilter(1));
+        rightProcessor.addFilter(rightEyeDistortion);
         viewPortRight.addProcessor(rightProcessor);
     }
 
