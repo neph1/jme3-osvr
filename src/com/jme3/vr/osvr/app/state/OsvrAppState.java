@@ -159,9 +159,18 @@ public class OsvrAppState extends AbstractAppState{
     
     private void setupViews(){
         camRight = camLeft.clone();
-        camLeft.setViewPort(0, 0.5f, 0, 1f);
-        camRight.setViewPort(0.5f, 1f, 0, 1f);
+        
         float[] projectionMatrix = new float[16];
+        
+        int[] vpLeft = new int[4];
+        int[] vpRight = new int[4];
+        
+        display.osvrClientGetRelativeViewportForViewerEyeSurface(0, 0, 0, vpLeft);
+        display.osvrClientGetRelativeViewportForViewerEyeSurface(0, 1, 0, vpRight);
+        int width = vpLeft[2] + vpRight[2];
+        int height = vpLeft[3];
+        camLeft.setViewPort(((float)vpLeft[0]) / width, ((float)vpLeft[2]) / width, ((float)vpLeft[1]) / height, ((float)vpLeft[3]) / height);
+        camRight.setViewPort(((float)vpRight[0]) / width, ((float)vpRight[2]+ vpRight[0]) / width, ((float)vpRight[1]) / height, ((float)vpRight[3]) / height);
         
         viewPortRight = application.getRenderManager().createMainView("Right viewport", camRight);
         viewPortRight.setClearFlags(true, true, true);
