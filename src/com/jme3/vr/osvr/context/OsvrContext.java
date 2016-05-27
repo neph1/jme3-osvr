@@ -31,19 +31,21 @@ import osvr.util.OSVR_TimeValue;
  */
 public class OsvrContext implements IVrContext{
 
-    private final Eye leftEye;
-    private final Eye rightEye;
+    private  Eye leftEye;
+    private  Eye rightEye;
     
-    private final Map<String, Interface> interfaces = new HashMap<String, Interface>();
-    private final Map<String, OSVR_Pose3> trackedPoses = new HashMap<String, OSVR_Pose3>();
+//    private final Map<String, Interface> interfaces = new HashMap<String, Interface>();
+//    private final Map<String, OSVR_Pose3> trackedPoses = new HashMap<String, OSVR_Pose3>();
     
     ContextWrapper context;
-    private final DisplayC display;
-    InterfaceState interfaceState;
-    private OSVR_Pose3 tempPose = new OSVR_Pose3();
-    private OSVR_TimeValue timeValue = new OSVR_TimeValue();
-    
+    private  DisplayC display;
+    private OSVR_RadialDistortionParameters distortion;
+//    InterfaceState interfaceState;
+//    private OSVR_Pose3 tempPose = new OSVR_Pose3();
+//    private OSVR_TimeValue timeValue = new OSVR_TimeValue();
+//    
     public OsvrContext(ContextWrapper context, DisplayC display){
+        this.context = context;
         this.display = display;
         leftEye = new Eye(0);
         rightEye = new Eye(1);
@@ -51,10 +53,13 @@ public class OsvrContext implements IVrContext{
         initialize();
     }
 
+    public OsvrContext() {
+    }
+
     @Override
     public void initialize() {
         TempVars tempVars = TempVars.get();
-        OSVR_RadialDistortionParameters distortion = new OSVR_RadialDistortionParameters();
+        distortion = new OSVR_RadialDistortionParameters();
         display.osvrClientGetViewerEyeSurfaceRadialDistortion(0, 0, 0, distortion);
         OsvrUtil.toVector2f(tempVars.vect2d, distortion.getCenterOfProjection().getData());
         leftEye.setDistortionCenter(tempVars.vect2d);
@@ -67,9 +72,8 @@ public class OsvrContext implements IVrContext{
         rightEye.setDistortionK(tempVars.vect1);
         display.releaseDoubleArray(distortion.getCenterOfProjection().getData());
         display.releaseDoubleArray(distortion.getK1().getData());
-        
         tempVars.release();
-        interfaceState = new InterfaceState();
+//        interfaceState = new InterfaceState();
     }
     
     @Override
@@ -87,22 +91,22 @@ public class OsvrContext implements IVrContext{
         display.releaseFloatArray(tempVars.matrixWrite);
         tempVars.release();
         
-        Iterator<String> it = interfaces.keySet().iterator();
+//        Iterator<String> it = interfaces.keySet().iterator();
             
-            String key;
-            while(it.hasNext()){
-                key = it.next();
-                int result = interfaceState.osvrGetPoseState(interfaces.get(key).getNativeHandle(), timeValue, tempPose);
-                if(result == OSVRConstants.OSVR_RETURN_SUCCESS){
-                    trackedPoses.get(key).getRotation().set(tempPose.getRotation());
-                    trackedPoses.get(key).getTranslation().set(tempPose.getTranslation());
-                } else {
-                    Logger.getLogger(OsvrAppState.class.getSimpleName()).log(Level.FINE, "No pose data for " + key);
-                }
-                tempPose.dispose();
-                display.releaseDoubleArray(tempPose.getRotation().getData());
-                display.releaseDoubleArray(tempPose.getTranslation().getData());
-            }
+//        String key;
+//        while(it.hasNext()){
+//            key = it.next();
+//            int result = interfaceState.osvrGetPoseState(interfaces.get(key).getNativeHandle(), timeValue, tempPose);
+//            if(result == OSVRConstants.OSVR_RETURN_SUCCESS){
+//                trackedPoses.get(key).getRotation().set(tempPose.getRotation());
+//                trackedPoses.get(key).getTranslation().set(tempPose.getTranslation());
+//            } else {
+//                Logger.getLogger(OsvrAppState.class.getSimpleName()).log(Level.FINE, "No pose data for " + key);
+//            }
+//            tempPose.dispose();
+//            display.releaseDoubleArray(tempPose.getRotation().getData());
+//            display.releaseDoubleArray(tempPose.getTranslation().getData());
+//        }
     }
 
     @Override
@@ -115,18 +119,18 @@ public class OsvrContext implements IVrContext{
         return null;
     }
 
-    public void addTrackingInterface(String name){
-        Interface iface = new Interface();
-        
-        context.getInterface(name, iface);
-        interfaces.put(name, iface);
-        trackedPoses.put(name, new OSVR_Pose3());
-        Logger.getLogger(OsvrAppState.class.getSimpleName()).log(Level.FINE, "Added interface for " + name);
-    }
-    
-    public OSVR_Pose3 getPose(String name){
-        return trackedPoses.get(name);
-    }
+//    public void addTrackingInterface(String name){
+//        Interface iface = new Interface();
+//        
+//        context.getInterface(name, iface);
+//        interfaces.put(name, iface);
+//        trackedPoses.put(name, new OSVR_Pose3());
+//        Logger.getLogger(OsvrAppState.class.getSimpleName()).log(Level.FINE, "Added interface for " + name);
+//    }
+//    
+//    public OSVR_Pose3 getPose(String name){
+//        return trackedPoses.get(name);
+//    }
 
     
 }

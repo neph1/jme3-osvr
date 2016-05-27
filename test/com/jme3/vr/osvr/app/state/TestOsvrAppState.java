@@ -24,7 +24,7 @@ public class TestOsvrAppState extends SimpleApplication {
     @Override
     public void simpleInitApp() {
         flyCam.setEnabled(false);
-        OsvrAppState osvrAppState = new OsvrAppState();
+        OsvrAppState osvrAppState = new OsvrAppState(rootNode);
         stateManager.attach(osvrAppState);
         
         Geometry g = new Geometry("", new Box(1,1,1));

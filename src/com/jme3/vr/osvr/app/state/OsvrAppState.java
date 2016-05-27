@@ -39,12 +39,12 @@ import osvr.util.OSVR_TimeValue;
  */
 public class OsvrAppState extends AbstractAppState{
 
-    ContextWrapper context;
-    DisplayC display;
+    private ContextWrapper context;
+    private DisplayC display;
     
     private Application application;
     private OsvrContext osvrContext;
-    
+    private Node rootNode;
     
     
     private Camera camLeft,camRight;
@@ -55,8 +55,8 @@ public class OsvrAppState extends AbstractAppState{
         LibraryLoader.loadLibraries();
     }
     
-    public OsvrAppState(){
-        
+    public OsvrAppState(Node rootNode){
+        this.rootNode = rootNode;
     }
     
     @Override
@@ -64,17 +64,17 @@ public class OsvrAppState extends AbstractAppState{
         super.initialize(stateManager, app);
         
         this.application = app;
-        if(application instanceof SimpleApplication && observer != null){
-            ((SimpleApplication)application).getRootNode().attachChild(observer);
+        if(observer != null){
+            rootNode.attachChild(observer);
         }
         camLeft = app.getCamera();
         viewPortLeft = app.getViewPort();
 
         setupAndWaitForContext();
-        
+//        
         setupAndWaitForDisplay();
         osvrContext = new OsvrContext(context, display);
-        
+//        
         setupViews();
     }
     
@@ -176,7 +176,7 @@ public class OsvrAppState extends AbstractAppState{
         viewPortRight = application.getRenderManager().createMainView("Right viewport", camRight);
         viewPortRight.setClearFlags(true, true, true);
         viewPortRight.setBackgroundColor(viewPortLeft.getBackgroundColor());
-        viewPortRight.attachScene(((SimpleApplication)this.application).getRootNode());
+        viewPortRight.attachScene(rootNode);
         
         display.osvrClientGetViewerEyeSurfaceProjectionMatrixf(0, 0, 0, application.getCamera().getFrustumNear(), application.getCamera().getFrustumFar(), 0, projectionMatrix);
         camLeft.setProjectionMatrix(new Matrix4f(projectionMatrix));
