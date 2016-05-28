@@ -81,7 +81,7 @@ public class DualCamAppState extends AbstractAppState{
         Material leftMat = new Material(app.getAssetManager(), "com/jme3/vr/shaders/Distortion.j3md");
         Vector2f center = new Vector2f(0.47099999999999997f, 0.5f);
         leftMat.setVector2("Center", center);
-        leftMat.setFloat("K1_Red", 0.5f);
+        leftMat.setFloat("K1_Red", 1f);
         leftMat.setFloat("K1_Green", 1);
         leftMat.setFloat("K1_Blue", 1);
         leftMat.setInt("Eye", 0);
@@ -93,7 +93,7 @@ public class DualCamAppState extends AbstractAppState{
         Material rightMat = new Material(app.getAssetManager(), "com/jme3/vr/shaders/Distortion.j3md");
         center = new Vector2f(0.52900000000000003f, 0.5f);
         rightMat.setVector2("Center", center);
-        rightMat.setFloat("K1_Red", 0.5f);
+        rightMat.setFloat("K1_Red", 1f);
         rightMat.setFloat("K1_Green", 1);
         rightMat.setFloat("K1_Blue", 1);
         rightMat.setTexture("Texture", rightEyeTex);
