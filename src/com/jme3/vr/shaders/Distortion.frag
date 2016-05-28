@@ -22,7 +22,7 @@ void main(){
     vec4 color_red, color_green, color_blue;
     vec2 sectorOrigin;
     vec4 color;
-
+    
     sectorOrigin = m_Center.xy;
 
     uv_red = Distort(texCoord-sectorOrigin, m_K1_Red) + sectorOrigin;
