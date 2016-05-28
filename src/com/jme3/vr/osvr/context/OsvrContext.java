@@ -78,6 +78,7 @@ public class OsvrContext implements IVrContext{
     
     @Override
     public void update() {
+        context.update();
         TempVars tempVars = TempVars.get();
         
         display.osvrClientGetViewerEyeViewMatrixf(0, 0, 0, tempVars.matrixWrite);

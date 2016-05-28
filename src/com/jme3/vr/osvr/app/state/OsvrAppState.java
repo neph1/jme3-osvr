@@ -9,12 +9,24 @@ import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
+import com.jme3.material.Material;
+import com.jme3.math.ColorRGBA;
+import com.jme3.math.FastMath;
 import com.jme3.math.Matrix4f;
+import com.jme3.math.Quaternion;
+import com.jme3.math.Vector3f;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.renderer.Camera;
 import com.jme3.renderer.ViewPort;
+import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
+import com.jme3.scene.shape.Quad;
+import com.jme3.texture.FrameBuffer;
+import com.jme3.texture.Image;
+import com.jme3.texture.Texture;
+import com.jme3.texture.Texture2D;
 import com.jme3.util.TempVars;
+import com.jme3.vr.app.DualCamAppState;
 import com.jme3.vr.osvr.context.OsvrContext;
 import com.jme3.vr.osvr.post.OsvrDistortionFilter;
 import com.jme3.vr.osvr.util.OsvrUtil;
@@ -48,8 +60,8 @@ public class OsvrAppState extends AbstractAppState{
     
     
     private Camera camLeft,camRight;
-    private ViewPort viewPortLeft, viewPortRight;
     private Node observer; // = new Node("Observer");
+    private DualCamAppState camAppState;
     
     static {
         LibraryLoader.loadLibraries();
@@ -67,15 +79,15 @@ public class OsvrAppState extends AbstractAppState{
         if(observer != null){
             rootNode.attachChild(observer);
         }
-        camLeft = app.getCamera();
-        viewPortLeft = app.getViewPort();
-
+        
         setupAndWaitForContext();
-//        
+        
         setupAndWaitForDisplay();
+        
         osvrContext = new OsvrContext(context, display);
-//        
+
         setupViews();
+        
     }
     
     private void setupAndWaitForContext(){
@@ -125,7 +137,7 @@ public class OsvrAppState extends AbstractAppState{
     public void update(float tpf) {
         super.update(tpf);
         if(context != null){
-            context.update();
+            
             osvrContext.update();
             
             
@@ -139,8 +151,8 @@ public class OsvrAppState extends AbstractAppState{
                 tempVars.vect1.addLocal(observer.getLocalTranslation());
                 tempVars.quat1.multLocal(observer.getLocalRotation());
             }
+            
             camLeft.setFrame(tempVars.vect1, tempVars.quat1);
-
             // right eye
             osvrContext.getEye(1).getViewMatrix().toTranslationVector(tempVars.vect1);
             osvrContext.getEye(1).getViewMatrix().toRotationQuat(tempVars.quat1);
@@ -155,46 +167,32 @@ public class OsvrAppState extends AbstractAppState{
         }
     }
     
-    
-    
     private void setupViews(){
-        camRight = camLeft.clone();
+        camAppState = application.getStateManager().getState(DualCamAppState.class);
         
-        float[] projectionMatrix = new float[16];
+        camLeft = camAppState.getCamera(0);
+        camRight = camAppState.getCamera(1);
         
         int[] vpLeft = new int[4];
         int[] vpRight = new int[4];
-        
         display.osvrClientGetRelativeViewportForViewerEyeSurface(0, 0, 0, vpLeft);
         display.osvrClientGetRelativeViewportForViewerEyeSurface(0, 1, 0, vpRight);
-        int width = vpLeft[2] + vpRight[2];
-        int height = vpLeft[3];
-        camLeft.setViewPort(((float)vpLeft[0]) / width, ((float)vpLeft[2]) / width, ((float)vpLeft[1]) / height, ((float)vpLeft[3]) / height);
-        camRight.setViewPort(((float)vpRight[0]) / width, ((float)vpRight[2]+ vpRight[0]) / width, ((float)vpRight[1]) / height, ((float)vpRight[3]) / height);
+//        camLeft.resize(vpLeft[2], vpLeft[3], true);
+//        camRight.resize(vpRight[2], vpRight[3], true);
         display.releaseIntArray(vpLeft);
         display.releaseIntArray(vpRight);
-        viewPortRight = application.getRenderManager().createMainView("Right viewport", camRight);
-        viewPortRight.setClearFlags(true, true, true);
-        viewPortRight.setBackgroundColor(viewPortLeft.getBackgroundColor());
-        viewPortRight.attachScene(rootNode);
         
-        display.osvrClientGetViewerEyeSurfaceProjectionMatrixf(0, 0, 0, application.getCamera().getFrustumNear(), application.getCamera().getFrustumFar(), 0, projectionMatrix);
+        float[] projectionMatrix = new float[16];
+        System.out.println(camLeft.getProjectionMatrix());
+        display.osvrClientGetViewerEyeSurfaceProjectionMatrixf(0, 0, 0, camLeft.getFrustumNear(), camLeft.getFrustumFar(), 0, projectionMatrix);
         camLeft.setProjectionMatrix(new Matrix4f(projectionMatrix));
-        
-        display.osvrClientGetViewerEyeSurfaceProjectionMatrixf(0, 1, 0, application.getCamera().getFrustumNear(), application.getCamera().getFrustumFar(), 0, projectionMatrix);
+        System.out.println(camLeft.getProjectionMatrix());
+        display.osvrClientGetViewerEyeSurfaceProjectionMatrixf(0, 1, 0, camRight.getFrustumNear(), camRight.getFrustumFar(), 0, projectionMatrix);
         camRight.setProjectionMatrix(new Matrix4f(projectionMatrix));
         display.releaseFloatArray(projectionMatrix);
-        OsvrDistortionFilter leftEyeDistortion = new OsvrDistortionFilter(osvrContext.getEye(0));
-        FilterPostProcessor leftProcessor = new FilterPostProcessor(application.getAssetManager());
-        leftProcessor.addFilter(leftEyeDistortion);
-        application.getRenderManager().getMainView("Default").addProcessor(leftProcessor);
         
-        OsvrDistortionFilter rightEyeDistortion = new OsvrDistortionFilter(osvrContext.getEye(1));
-        FilterPostProcessor rightProcessor = new FilterPostProcessor(application.getAssetManager());
-        rightProcessor.addFilter(rightEyeDistortion);
-        viewPortRight.addProcessor(rightProcessor);
     }
-
+    
     @Override
     public void cleanup() {
         super.cleanup(); //To change body of generated methods, choose Tools | Templates.

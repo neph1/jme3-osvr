@@ -6,10 +6,11 @@ MaterialDef Barrel {
         Float K1_Green;
         Float K1_Blue;
         Vector2 Center;
+        Int Eye;
     }
  
     Technique {
-        VertexShader GLSL100:   Common/MatDefs/Post/Post.vert
+        VertexShader GLSL100:   com/jme3/vr/shaders/Distortion.vert
         FragmentShader GLSL100: com/jme3/vr/shaders/Distortion.frag
  
         WorldParameters {

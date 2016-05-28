@@ -25,6 +25,12 @@ public class OsvrUtil {
         if(store == null){
             store = new Matrix4f();
         }
+        float tempFloat = newMatrix[3];
+        // TODO: fix if scale ever comes into picture
+        newMatrix[3] = -newMatrix[12] ;
+//        newMatrix[12] = tempFloat;
+        newMatrix[7] = -newMatrix[13] ;
+        newMatrix[11] = -newMatrix[14] ;
         store.set(newMatrix);
         return store;
     }
