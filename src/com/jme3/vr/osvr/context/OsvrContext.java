@@ -5,25 +5,19 @@
  */
 package com.jme3.vr.osvr.context;
 
-import com.jme3.math.Vector2f;
 import com.jme3.util.TempVars;
 import com.jme3.vr.context.Eye;
 import com.jme3.vr.context.IVrContext;
-import com.jme3.vr.osvr.app.state.OsvrAppState;
 import com.jme3.vr.osvr.util.OsvrUtil;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import osvr.clientkit.ContextWrapper;
 import osvr.clientkit.DisplayC;
 import osvr.clientkit.Interface;
-import osvr.clientkit.InterfaceState;
-import osvr.clientkit.OSVRConstants;
+import osvr.config.DisplayParameters;
+import osvr.config.RenderManagerConfig;
 import osvr.util.OSVR_Pose3;
 import osvr.util.OSVR_RadialDistortionParameters;
-import osvr.util.OSVR_TimeValue;
 
 /**
  *
@@ -34,12 +28,14 @@ public class OsvrContext implements IVrContext{
     private  Eye leftEye;
     private  Eye rightEye;
     
-//    private final Map<String, Interface> interfaces = new HashMap<String, Interface>();
-//    private final Map<String, OSVR_Pose3> trackedPoses = new HashMap<String, OSVR_Pose3>();
+    private final Map<String, Interface> interfaces = new HashMap<String, Interface>();
+    private final Map<String, OSVR_Pose3> trackedPoses = new HashMap<String, OSVR_Pose3>();
     
     ContextWrapper context;
     private  DisplayC display;
     private OSVR_RadialDistortionParameters distortion;
+    private DisplayParameters displayParameters;
+    private RenderManagerConfig renderManagerConfig;
 //    InterfaceState interfaceState;
 //    private OSVR_Pose3 tempPose = new OSVR_Pose3();
 //    private OSVR_TimeValue timeValue = new OSVR_TimeValue();
@@ -50,6 +46,8 @@ public class OsvrContext implements IVrContext{
         leftEye = new Eye(0);
         rightEye = new Eye(1);
         
+        displayParameters = new DisplayParameters(context.getStringParameter("/display"));
+        renderManagerConfig = new RenderManagerConfig(context.getStringParameter("/renderManagerConfig"));
         initialize();
     }
 
@@ -85,7 +83,6 @@ public class OsvrContext implements IVrContext{
         OsvrUtil.toMatrix4f(tempVars.tempMat4, tempVars.matrixWrite);
         leftEye.setViewMatrix(tempVars.tempMat4);
         display.releaseFloatArray(tempVars.matrixWrite);
-        
         display.osvrClientGetViewerEyeViewMatrixf(0, 1, 0, tempVars.matrixWrite);
         OsvrUtil.toMatrix4f(tempVars.tempMat4, tempVars.matrixWrite);
         rightEye.setViewMatrix(tempVars.tempMat4);
@@ -133,5 +130,11 @@ public class OsvrContext implements IVrContext{
 //        return trackedPoses.get(name);
 //    }
 
-    
+    public DisplayParameters getDisplayParameters() {
+        return displayParameters;
+    }
+
+    public RenderManagerConfig getRenderManagerConfig() {
+        return renderManagerConfig;
+    }
 }
